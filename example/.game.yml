@@ -1,0 +1,5 @@
+# Example app configuration
+name: green_example
+version: 1.0.0
+
+# Inherits engine configuration from parent package

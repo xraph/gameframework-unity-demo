@@ -1,0 +1,35 @@
+PODS:
+  - Flutter (1.0.0)
+  - gameframework (0.0.1):
+    - Flutter
+  - gameframework_unity (2022.3.0):
+    - Flutter
+    - gameframework
+  - green (0.1.0):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - gameframework (from `.symlinks/plugins/gameframework/ios`)
+  - gameframework_unity (from `.symlinks/plugins/gameframework_unity/ios`)
+  - green (from `.symlinks/plugins/green/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  gameframework:
+    :path: ".symlinks/plugins/gameframework/ios"
+  gameframework_unity:
+    :path: ".symlinks/plugins/gameframework_unity/ios"
+  green:
+    :path: ".symlinks/plugins/green/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  gameframework: 4a256a89de7f1c241f198124418882ed63b8d54c
+  gameframework_unity: 08cdd9a4c4b1f4b46d66ccb8c2f8f03a6d55e1e7
+  green: 02d0797f7d6fff5f739c5caae3799b7b577de289
+
+PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+
+COCOAPODS: 1.15.2
