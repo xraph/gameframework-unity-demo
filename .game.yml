@@ -42,7 +42,11 @@ engines:
       windows:
         enabled: false
         target_path: windows/unity_build
-      
+
       linux:
         enabled: false
         target_path: linux/unity_build
+
+      web:
+        enabled: true
+        target_path: web/unity_build

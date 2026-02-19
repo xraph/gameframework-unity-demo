@@ -77,64 +77,6 @@ namespace Xraph.GameFramework.Unity
             _instance = this;
             DontDestroyOnLoad(gameObject);
             Debug.Log("[FlutterBridge] Initialized");
-            
-            // Log via Android native logging to bypass Unity's Debug.Log filtering
-            LogToAndroid("FlutterBridge", "Awake() called - FlutterBridge initialized");
-            
-            // Send a test message to Kotlin side to verify C#->Kotlin communication works
-#if UNITY_ANDROID && !UNITY_EDITOR
-            TestKotlinCommunication();
-#endif
-        }
-        
-#if UNITY_ANDROID && !UNITY_EDITOR
-        /// <summary>
-        /// Test method to verify C# can communicate with Kotlin
-        /// This sends a test message immediately during Awake
-        /// </summary>
-        private void TestKotlinCommunication()
-        {
-            try
-            {
-                Debug.Log("FlutterBridge: Testing Kotlin communication...");
-                LogToAndroid("FlutterBridge", "Testing Kotlin communication...");
-                
-                // Try to call FlutterBridgeRegistry.sendMessageToFlutter directly
-                using (AndroidJavaClass registry = new AndroidJavaClass("com.xraph.gameframework.unity.FlutterBridgeRegistry"))
-                {
-                    bool success = registry.CallStatic<bool>("sendMessageToFlutter", 
-                        "FlutterBridge", 
-                        "testInit", 
-                        "{\"message\":\"FlutterBridge initialized in Unity\",\"timestamp\":" + Time.time + "}");
-                    
-                    Debug.Log($"FlutterBridge: Test message result: {success}");
-                    LogToAndroid("FlutterBridge", $"Test message sent, result: {success}");
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"FlutterBridge: Test communication failed: {e.Message}");
-                LogToAndroid("FlutterBridge", $"Test communication FAILED: {e.Message}");
-            }
-        }
-#endif
-        
-        /// <summary>
-        /// Log directly to Android logcat, bypassing Unity's Debug.Log
-        /// This works even in release builds where Debug.Log may be stripped
-        /// </summary>
-        private static void LogToAndroid(string tag, string message)
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try
-            {
-                using (AndroidJavaClass logClass = new AndroidJavaClass("android.util.Log"))
-                {
-                    logClass.CallStatic<int>("d", "Unity_" + tag, message);
-                }
-            }
-            catch { }
-#endif
         }
 
         /// <summary>
@@ -341,20 +283,22 @@ namespace Xraph.GameFramework.Unity
             try
             {
                 Debug.Log($"FlutterBridge: Sending to Flutter - Target: {target}, Method: {method}, Data: {data}");
-                LogToAndroid("FlutterBridge", $"SendToFlutter: target={target}, method={method}");
 
 #if UNITY_ANDROID && !UNITY_EDITOR
                 SendToFlutterAndroid(target, method, data);
 #elif UNITY_IOS && !UNITY_EDITOR
                 SendToFlutterIOS(target, method, data);
+#elif UNITY_WEBGL && !UNITY_EDITOR
+                SendToFlutterWebGL(target, method, data);
+#elif UNITY_STANDALONE_OSX && !UNITY_EDITOR
+                SendToFlutterMacOS(target, method, data);
 #else
-                Debug.LogWarning("FlutterBridge: SendToFlutter only works on Android/iOS builds");
+                Debug.LogWarning("FlutterBridge: SendToFlutter only works on Android/iOS/WebGL/macOS builds");
 #endif
             }
             catch (Exception e)
             {
                 Debug.LogError($"FlutterBridge: Error sending message: {e.Message}");
-                LogToAndroid("FlutterBridge", $"ERROR in SendToFlutter: {e.Message}");
             }
         }
 
@@ -407,7 +351,6 @@ namespace Xraph.GameFramework.Unity
         private void SendToFlutterAndroid(string target, string method, string data)
         {
             Debug.Log($"FlutterBridge Android: Sending - Target: {target}, Method: {method}");
-            LogToAndroid("FlutterBridge", $"SendToFlutterAndroid: target={target}, method={method}");
             
             try
             {
@@ -417,28 +360,23 @@ namespace Xraph.GameFramework.Unity
                 if (registry == null)
                 {
                     Debug.LogError("FlutterBridge Android: Cannot find FlutterBridgeRegistry class!");
-                    LogToAndroid("FlutterBridge", "ERROR: FlutterBridgeRegistry class is null!");
                     return;
                 }
                 
-                LogToAndroid("FlutterBridge", "Calling FlutterBridgeRegistry.sendMessageToFlutter...");
                 bool success = registry.CallStatic<bool>("sendMessageToFlutter", target, method, data);
                 if (success)
                 {
                     Debug.Log($"FlutterBridge Android: Message sent successfully!");
-                    LogToAndroid("FlutterBridge", "Message sent successfully!");
                 }
                 else
                 {
                     Debug.LogWarning("FlutterBridge Android: sendMessageToFlutter returned false - controller may not be registered");
-                    LogToAndroid("FlutterBridge", "WARNING: sendMessageToFlutter returned false");
                 }
             }
             catch (Exception e)
             {
                 Debug.LogError($"FlutterBridge Android: Exception sending message: {e.Message}");
                 Debug.LogError($"FlutterBridge Android: StackTrace: {e.StackTrace}");
-                LogToAndroid("FlutterBridge", $"EXCEPTION: {e.Message}");
             }
         }
         
@@ -450,39 +388,32 @@ namespace Xraph.GameFramework.Unity
             // Return cached class if available
             if (_flutterBridgeRegistryClass != null)
             {
-                LogToAndroid("FlutterBridge", "Using cached FlutterBridgeRegistry class");
                 return _flutterBridgeRegistryClass;
             }
             
             // If we already tried and failed, don't retry
             if (_registryClassLoadAttempted)
             {
-                LogToAndroid("FlutterBridge", "Class loading already attempted and failed");
                 return null;
             }
             
             _registryClassLoadAttempted = true;
             string className = "com.xraph.gameframework.unity.FlutterBridgeRegistry";
             
-            LogToAndroid("FlutterBridge", "Attempting to load FlutterBridgeRegistry class...");
-            
             // Method 1: Try direct class loading (works if classloaders are unified)
             try
             {
                 Debug.Log("FlutterBridge Android: Trying direct class loading...");
-                LogToAndroid("FlutterBridge", "Method 1: Direct class loading...");
                 _flutterBridgeRegistryClass = new AndroidJavaClass(className);
                 
                 // Test that it works by calling isReady
-                bool ready = _flutterBridgeRegistryClass.CallStatic<bool>("isReady");
+                _flutterBridgeRegistryClass.CallStatic<bool>("isReady");
                 Debug.Log("FlutterBridge Android: Direct class loading succeeded!");
-                LogToAndroid("FlutterBridge", $"Direct loading SUCCESS! isReady={ready}");
                 return _flutterBridgeRegistryClass;
             }
             catch (Exception e)
             {
                 Debug.Log($"FlutterBridge Android: Direct loading failed: {e.Message}");
-                LogToAndroid("FlutterBridge", $"Direct loading FAILED: {e.Message}");
                 _flutterBridgeRegistryClass = null;
             }
             
@@ -490,7 +421,6 @@ namespace Xraph.GameFramework.Unity
             try
             {
                 Debug.Log("FlutterBridge Android: Trying Activity classloader...");
-                LogToAndroid("FlutterBridge", "Method 2: Activity classloader...");
                 using (AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
                 using (AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
                 {
@@ -508,7 +438,6 @@ namespace Xraph.GameFramework.Unity
                                         // Store reference to the class object
                                         _flutterBridgeRegistryClass = new AndroidJavaClass(className);
                                         Debug.Log("FlutterBridge Android: Activity classloader succeeded!");
-                                        LogToAndroid("FlutterBridge", "Activity classloader SUCCESS!");
                                         return _flutterBridgeRegistryClass;
                                     }
                                 }
@@ -520,11 +449,9 @@ namespace Xraph.GameFramework.Unity
             catch (Exception e)
             {
                 Debug.LogError($"FlutterBridge Android: Activity classloader failed: {e.Message}");
-                LogToAndroid("FlutterBridge", $"Activity classloader FAILED: {e.Message}");
             }
             
             Debug.LogError("FlutterBridge Android: All class loading methods failed!");
-            LogToAndroid("FlutterBridge", "ERROR: All class loading methods failed!");
             return null;
         }
 #endif
@@ -534,6 +461,29 @@ namespace Xraph.GameFramework.Unity
         private static extern void SendMessageToFlutter(string target, string method, string data);
 
         private void SendToFlutterIOS(string target, string method, string data)
+        {
+            SendMessageToFlutter(target, method, data);
+        }
+#endif
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        [DllImport("__Internal")]
+        private static extern void SendMessageToFlutter(string target, string method, string data);
+
+        [DllImport("__Internal")]
+        private static extern void SendSceneLoadedToFlutter(string name, int buildIndex);
+
+        private void SendToFlutterWebGL(string target, string method, string data)
+        {
+            SendMessageToFlutter(target, method, data);
+        }
+#endif
+
+#if UNITY_STANDALONE_OSX && !UNITY_EDITOR
+        [DllImport("__Internal")]
+        private static extern void SendMessageToFlutter(string target, string method, string data);
+
+        private void SendToFlutterMacOS(string target, string method, string data)
         {
             SendMessageToFlutter(target, method, data);
         }

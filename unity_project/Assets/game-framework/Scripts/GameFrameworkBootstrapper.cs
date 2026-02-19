@@ -4,57 +4,6 @@ using UnityEngine;
 
 namespace Xraph.GameFramework.Unity
 {
-    // Static class to verify IL2CPP includes our code
-    public static class GameFrameworkStartup
-    {
-        // Static constructor runs when the type is first accessed
-        static GameFrameworkStartup()
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try
-            {
-                using (AndroidJavaClass logClass = new AndroidJavaClass("android.util.Log"))
-                {
-                    logClass.CallStatic<int>("i", "Unity_Startup", "=== GameFrameworkStartup static constructor called ===");
-                }
-            }
-            catch { }
-#endif
-        }
-        
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void OnBeforeSceneLoad()
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try
-            {
-                using (AndroidJavaClass logClass = new AndroidJavaClass("android.util.Log"))
-                {
-                    logClass.CallStatic<int>("i", "Unity_Startup", "=== GameFrameworkStartup BeforeSceneLoad ===");
-                }
-            }
-            catch { }
-#endif
-            Debug.Log("[GameFrameworkStartup] BeforeSceneLoad");
-        }
-        
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void OnAfterSceneLoad()
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try
-            {
-                using (AndroidJavaClass logClass = new AndroidJavaClass("android.util.Log"))
-                {
-                    logClass.CallStatic<int>("i", "Unity_Startup", "=== GameFrameworkStartup AfterSceneLoad ===");
-                }
-            }
-            catch { }
-#endif
-            Debug.Log("[GameFrameworkStartup] AfterSceneLoad");
-        }
-    }
-
     /// <summary>
     /// Automatic bootstrapper for Game Framework components.
     /// 
@@ -111,49 +60,23 @@ namespace Xraph.GameFramework.Unity
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void OnRuntimeInitialize()
         {
-            LogToAndroidStatic("Bootstrapper", "OnRuntimeInitialize called");
-            
-            if (!EnableAutoBootstrap)
-            {
-                LogToAndroidStatic("Bootstrapper", "EnableAutoBootstrap is false, skipping");
-                return;
-            }
+            if (!EnableAutoBootstrap) return;
 
             // Check if a bootstrapper already exists in the scene
             var existingBootstrapper = FindObjectOfType<GameFrameworkBootstrapper>();
             if (existingBootstrapper != null)
             {
                 // Let the scene bootstrapper handle it
-                LogToAndroidStatic("Bootstrapper", "Existing bootstrapper found in scene");
                 return;
             }
 
             // Create a runtime bootstrapper
-            LogToAndroidStatic("Bootstrapper", "Creating runtime bootstrapper...");
             var go = new GameObject("[GameFramework Bootstrap]");
             var bootstrapper = go.AddComponent<GameFrameworkBootstrapper>();
             bootstrapper.autoCreateTargets = new List<string>(StaticAutoCreateTargets);
             DontDestroyOnLoad(go);
 
             Debug.Log("[GameFrameworkBootstrapper] Auto-initialized via RuntimeInitializeOnLoad");
-            LogToAndroidStatic("Bootstrapper", "Auto-initialized successfully");
-        }
-        
-        /// <summary>
-        /// Log directly to Android logcat (static version)
-        /// </summary>
-        private static void LogToAndroidStatic(string tag, string message)
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try
-            {
-                using (AndroidJavaClass logClass = new AndroidJavaClass("android.util.Log"))
-                {
-                    logClass.CallStatic<int>("d", "Unity_" + tag, message);
-                }
-            }
-            catch { }
-#endif
         }
 
         #endregion
@@ -162,7 +85,6 @@ namespace Xraph.GameFramework.Unity
 
         void Awake()
         {
-            LogToAndroidStatic("Bootstrapper", "Awake() called");
             Bootstrap();
         }
 
@@ -173,7 +95,6 @@ namespace Xraph.GameFramework.Unity
         private void Bootstrap()
         {
             Log("Starting bootstrap process...");
-            LogToAndroidStatic("Bootstrapper", "Bootstrap() starting...");
 
             // 1. Ensure FlutterBridge exists
             if (autoCreateFlutterBridge)
