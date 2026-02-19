@@ -1,0 +1,36 @@
+name: green
+description: My tests
+version: 0.1.0
+publish_to: 'none'  # Remove this line when ready to publish
+
+environment:
+  sdk: '>=3.4.3 <4.0.0'
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Core gameframework dependency
+  gameframework:
+    path: ../../xraph/gameframework/packages/gameframework
+  
+#  # Engine-specific dependency
+  gameframework_unity:
+    path: ../../xraph/gameframework/engines/unity/dart
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+# Minimal plugin registration (uses gameframework's implementations)
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.green.green
+        pluginClass: GreenPlugin
+      ios:
+        package: com.green.green
+        pluginClass: GreenPlugin

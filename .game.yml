@@ -1,0 +1,48 @@
+# Flutter Game Framework Configuration
+
+name: green
+version: 1.0.0
+
+# Engine configuration
+engines:
+  unity:
+    # Path to your Unity project
+    project_path: unity_project
+    
+    # Where Unity exports are saved
+    export_path: unity_exports
+    
+    # Export settings
+    export_settings:
+      development: false
+      build_configuration: Release
+      scenes:
+        - MainScene
+
+    # Platform configurations
+    platforms:
+      android:
+        enabled: true
+        target_path: android/unityLibrary
+        build_settings:
+          export_project: true
+          scripting_backend: IL2CPP
+          target_architectures: [ARM64]
+      
+      ios:
+        enabled: true
+        target_path: ios/UnityFramework.framework
+        build_settings:
+          symlink_libraries: true
+      
+      macos:
+        enabled: true
+        target_path: macos/UnityFramework.framework
+      
+      windows:
+        enabled: false
+        target_path: windows/unity_build
+      
+      linux:
+        enabled: false
+        target_path: linux/unity_build

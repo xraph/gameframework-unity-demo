@@ -1,0 +1,57 @@
+<linker>
+  <!-- 
+    IL2CPP Code Preservation for Game Framework
+    
+    Preserves reflection metadata for FlutterMethod attributes and message routing.
+    
+    CRITICAL: Without this, IL2CPP strips reflection metadata needed for [FlutterMethod]
+    attribute discovery, causing "SendMessage: object does not have receiver" errors.
+  -->
+  
+  <!-- Preserve entire Assembly-CSharp -->
+  <assembly fullname="Assembly-CSharp" preserve="all">
+    <!-- Preserve GameFrameworkDemo explicitly -->
+    <type fullname="GameFrameworkTemplate.GameFrameworkDemo" preserve="all"/>
+    
+    <!-- Preserve FlutterMonoBehaviour base class -->
+    <type fullname="Xraph.GameFramework.Unity.FlutterMonoBehaviour" preserve="all"/>
+    
+    <!-- Preserve MessageRouter -->
+    <type fullname="Xraph.GameFramework.Unity.MessageRouter" preserve="all"/>
+    
+    <!-- Preserve FlutterBridge -->
+    <type fullname="Xraph.GameFramework.Unity.FlutterBridge" preserve="all"/>
+    
+    <!-- Preserve GameFrameworkBootstrapper -->
+    <type fullname="Xraph.GameFramework.Unity.GameFrameworkBootstrapper" preserve="all"/>
+    
+    <!-- Preserve GameFrameworkStartup (early initialization) -->
+    <type fullname="Xraph.GameFramework.Unity.GameFrameworkStartup" preserve="all"/>
+    
+    <!-- Preserve SingletonMonoBehaviour -->
+    <type fullname="Xraph.GameFramework.Unity.SingletonMonoBehaviour`1" preserve="all"/>
+    
+    <!-- Preserve FlutterMethodAttribute (CRITICAL for reflection) -->
+    <type fullname="Xraph.GameFramework.Unity.FlutterMethodAttribute" preserve="all"/>
+    
+    <!-- Preserve FlutterSerialization -->
+    <type fullname="Xraph.GameFramework.Unity.FlutterSerialization" preserve="all"/>
+    
+    <!-- Preserve NativeAPI -->
+    <type fullname="Xraph.GameFramework.Unity.NativeAPI" preserve="all"/>
+  </assembly>
+  
+  <!-- Preserve Unity's RuntimeInitializeOnLoadMethod and related -->
+  <assembly fullname="UnityEngine.CoreModule" preserve="all">
+    <type fullname="UnityEngine.RuntimeInitializeOnLoadMethodAttribute" preserve="all"/>
+    <type fullname="UnityEngine.AndroidJavaClass" preserve="all"/>
+    <type fullname="UnityEngine.AndroidJavaObject" preserve="all"/>
+  </assembly>
+  
+  <!-- Preserve Unity's reflection capabilities -->
+  <assembly fullname="mscorlib">
+    <type fullname="System.Reflection.MethodInfo" preserve="all"/>
+    <type fullname="System.Reflection.ParameterInfo" preserve="all"/>
+    <type fullname="System.Attribute" preserve="all"/>
+  </assembly>
+</linker>
